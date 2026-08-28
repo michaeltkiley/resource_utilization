@@ -1,0 +1,57 @@
+name: Rebuild resource utilization dashboard
+
+on:
+  repository_dispatch:
+    types: [edo-updated, rstar-updated, unemployment-risk-updated]
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      # Private compute repo -- edo/rstar/unemployment_risk each run their
+      # own pipeline on their own schedule and commit outputs there; this
+      # job just reads whatever is currently at HEAD.
+      - name: Checkout output_gap (private, read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: michaeltkiley/output_gap
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          path: output_gap
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch CBO output gap
+        run: python3 scripts/00_fetch_cbo_gap.py
+
+      - name: Build dashboard
+        run: |
+          python3 scripts/01_build_dashboard.py \
+            --edo-file output_gap/edo/outputs/output_gap.csv \
+            --rstar-file output_gap/rstar/outputs/rstar.csv \
+            --risk-file output_gap/unemployment_risk/outputs/unemployment_risk.csv
+
+      - name: Commit and push docs/index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --quiet --cached || git commit -m "Auto-update dashboard [skip ci]"
+          git push
+
+      # Runs *after* publishing, on purpose (see dashboard's README "CBO
+      # reference-year check"): the dashboard has already published the
+      # correctly-labeled, uncorrected series either way. This step just
+      # makes the workflow run itself report failed on a mismatch, which
+      # is what triggers GitHub's default failed-scheduled-workflow email.
+      - name: Check CBO reference-year alignment
+        run: python3 scripts/02_assert_cbo_alignment.py

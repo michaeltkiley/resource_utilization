@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Utilization and Risk — Michael T. Kiley</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface-page: #eef1f4;
+    --surface-card: #ffffff;
+    --surface-tile: #f6f8fa;
+    --rule: #dde3e8;
+    --rule-soft: #e8ecef;
+    --ink: #10151d;
+    --ink-secondary: #4b5568;
+    --ink-muted: #7c8698;
+    --accent-text: #1c5cab;
+    --series-cbo: #2a78d6;
+    --series-bn: #eb6834;
+    --series-pf: #1baf7a;
+    --series-uc: #eda100;
+    --series-risk-full5: #e87ba4;
+    --series-risk-fin2: #008300;
+    --series-risk-mag-h4: #4a3aa7;
+    --series-risk-mag-h12: #e34948;
+    --series-neutral: #8a93a3;
+    --warning-bg: #fdf1e9;
+    --warning-border: #f0b98a;
+    --shadow: 0 1px 2px rgba(16, 21, 29, 0.04), 0 8px 24px -16px rgba(16, 21, 29, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --surface-page: #12161c;
+      --surface-card: #191f27;
+      --surface-tile: #1f2630;
+      --rule: #2a323d;
+      --rule-soft: #212933;
+      --ink: #f2f4f7;
+      --ink-secondary: #b7c0cc;
+      --ink-muted: #7c8798;
+      --accent-text: #74aeef;
+      --series-cbo: #3987e5;
+      --series-bn: #d95926;
+      --series-pf: #199e70;
+      --series-uc: #c98500;
+      --series-risk-full5: #d55181;
+      --series-risk-fin2: #008300;
+      --series-risk-mag-h4: #9085e9;
+      --series-risk-mag-h12: #e66767;
+      --series-neutral: #7c8798;
+      --warning-bg: #2b2015;
+      --warning-border: #7a4a1e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -16px rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --surface-page: #12161c;
+    --surface-card: #191f27;
+    --surface-tile: #1f2630;
+    --rule: #2a323d;
+    --rule-soft: #212933;
+    --ink: #f2f4f7;
+    --ink-secondary: #b7c0cc;
+    --ink-muted: #7c8798;
+    --accent-text: #74aeef;
+    --series-cbo: #3987e5;
+    --series-bn: #d95926;
+    --series-pf: #199e70;
+    --series-uc: #c98500;
+    --series-risk-full5: #d55181;
+    --series-risk-fin2: #008300;
+    --series-risk-mag-h4: #9085e9;
+    --series-risk-mag-h12: #e66767;
+    --series-neutral: #7c8798;
+    --warning-bg: #2b2015;
+    --warning-border: #7a4a1e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -16px rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--surface-page);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 6px; }
+  .eyebrow {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  h1 {
+    margin: 0;
+    font-family: "Newsreader", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .subtitle {
+    margin: 4px 0 0;
+    max-width: 68ch;
+    font-family: "Newsreader", Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink-secondary);
+  }
+  .citation {
+    margin: 8px 0 0;
+    max-width: 70ch;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+  }
+  .citation b { color: var(--ink-secondary); font-weight: 600; }
+  .reference-lines {
+    margin: 10px 0 0;
+    max-width: 70ch;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .reference-lines p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+  }
+  .asof {
+    margin: 6px 0 0;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  #risk-stat-row { grid-template-columns: repeat(2, minmax(0, 271px)); }
+  .stat-tile {
+    background: var(--surface-card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .stat-tile .label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stat-tile .swatch {
+    display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+    margin-right: 6px; position: relative; top: -1px;
+  }
+  .stat-tile .value {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em; color: var(--ink);
+  }
+  .stat-tile .deltas { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+  .stat-tile .delta-row { display: flex; flex-direction: column; gap: 1px; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .stat-tile .delta-row .dk { color: var(--ink-muted); font-size: 10.5px; }
+  .stat-tile .delta-row .dv { font-variant-numeric: tabular-nums; color: var(--ink-secondary); font-size: 12px; }
+
+  .chart-card {
+    background: var(--surface-card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 20px 20px 8px;
+    box-shadow: var(--shadow);
+  }
+  .chart-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px 20px; margin-bottom: 6px;
+  }
+  .chart-title { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 19px; color: var(--ink); }
+  .chart-caption { font-size: 12.5px; color: var(--ink-muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--ink-secondary); }
+  .legend .item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch-line { width: 14px; height: 2px; border-radius: 1px; }
+
+  .chart-wrap { position: relative; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .recession-band { fill: var(--ink); fill-opacity: 0.06; stroke: none; }
+  .grid-line { stroke: var(--rule-soft); stroke-width: 1; }
+  .zero-line { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 2 3; }
+  .axis-label { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; fill: var(--ink-muted); }
+  .series-path { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .band-fill { fill-opacity: 0.12; stroke: none; }
+  .band-caveat {
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+  .end-label { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; font-weight: 600; }
+  .hover-line { stroke: var(--ink-muted); stroke-width: 1; opacity: 0; pointer-events: none; }
+  .hover-dot { r: 3.5; stroke: var(--surface-card); stroke-width: 1.5; opacity: 0; pointer-events: none; }
+  .overlay { fill: transparent; cursor: crosshair; }
+
+  .tooltip {
+    position: absolute; pointer-events: none;
+    background: var(--surface-card); border: 1px solid var(--rule); border-radius: 8px;
+    box-shadow: var(--shadow); padding: 8px 10px; font-size: 12px; line-height: 1.6;
+    color: var(--ink); opacity: 0; transition: opacity 0.08s ease; z-index: 5; white-space: nowrap;
+  }
+  .tooltip .t-date { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; color: var(--ink-muted); margin-bottom: 3px; }
+  .tooltip .t-row { display: flex; align-items: center; gap: 14px; justify-content: space-between; }
+  .tooltip .t-row .k { display: flex; align-items: center; gap: 6px; color: var(--ink-secondary); }
+  .tooltip .t-row .v { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .tooltip .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  .methodology {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 18px 0 0; border-top: 1px solid var(--rule);
+    font-size: 12.5px; line-height: 1.65; color: var(--ink-muted);
+  }
+  .methodology b { color: var(--ink-secondary); font-weight: 600; }
+  .methodology .disclaimer { font-style: italic; }
+  .methodology .sources { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px; }
+  .references-block {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 4px;
+  }
+  .references-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-secondary);
+  }
+
+  @media (max-width: 760px) {
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tooltip { transition: none; }
+  }
+
+  .site-nav { border-bottom: 1px solid var(--rule); background: var(--surface-card); }
+  .site-nav-inner {
+    max-width: 1120px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .site-nav .wordmark { font-family: "Newsreader", Georgia, serif; font-weight: 500; font-size: 17px; color: var(--ink); text-decoration: none; }
+  .site-nav nav { display: flex; gap: 20px; flex-wrap: wrap; }
+  .site-nav nav a { font-family: "IBM Plex Sans", sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.02em; color: var(--ink-secondary); text-decoration: none; }
+  .site-nav nav a:hover, .site-nav nav a.active { color: var(--accent-text); }
+
+  .tabs {
+    display: flex; gap: 4px; border-bottom: 1px solid var(--rule);
+  }
+  .tab-button {
+    appearance: none; border: none; background: none; cursor: pointer;
+    font-family: "IBM Plex Sans", sans-serif; font-size: 14px; font-weight: 500;
+    color: var(--ink-muted); padding: 10px 4px 9px; margin-right: 20px;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-button:hover { color: var(--ink-secondary); }
+  .tab-button.active { color: var(--accent-text); border-bottom-color: var(--accent-text); }
+  .tab-panel[hidden] { display: none; }
+  .tab-panel { display: flex; flex-direction: column; gap: 22px; }
+
+  .exploratory-note {
+    font-size: 12px; color: var(--ink-muted); background: var(--surface-tile);
+    border: 1px dashed var(--rule); border-radius: 8px; padding: 8px 12px;
+  }
+  .warning-banner {
+    display: none;
+    font-size: 12.5px; line-height: 1.55; color: var(--ink);
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: 8px; padding: 10px 14px;
+  }
+  .warning-banner b { color: var(--ink); }
+  .warning-banner.visible { display: block; }
+  .tile-note {
+    font-size: 11px; color: var(--ink-muted); line-height: 1.4; margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="site-nav">
+  <div class="site-nav-inner">
+    <a class="wordmark" href="https://michaeltkiley.github.io/">Michael T. Kiley</a>
+    <nav>
+      <a href="https://michaeltkiley.github.io/">Home</a>
+      <a href="https://michaeltkiley.github.io/cv.html">CV</a>
+      <a href="https://michaeltkiley.github.io/termprem/">Yield Curve Tracker</a>
+      <a href="https://michaeltkiley.github.io/monetary_policy_surprises/">Monetary Policy Expectations</a>
+      <a href="#" class="active">Resource Utilization and Risk</a>
+      <a href="../equilibrium_rate/docs/index.html">Equilibrium Real Interest Rate</a>
+    </nav>
+  </div>
+</div>
+
+<div class="page">
+  <p class="exploratory-note">Exploratory build, not yet published as its own site — currently developed inside the <code>output_gap</code> project directory.</p>
+
+  <header class="masthead">
+    <p class="eyebrow">U.S. Economic Activity</p>
+    <h1>Resource Utilization and Risk</h1>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-button active" data-tab="gap">Resource Utilization</button>
+    <button class="tab-button" data-tab="risk">Recession and Unemployment Risk</button>
+  </nav>
+
+  <section class="tab-panel" id="panel-gap">
+    <p class="warning-banner" id="cbo-warning"></p>
+    <div class="masthead">
+      <p class="subtitle">How far is output from its potential — four ways of answering the same question.</p>
+      <p class="citation">The CBO gap comes from the Congressional Budget Office's own model of potential GDP. The other three come from two models built by economist Michael Kiley. The <b>EDO model</b> gives two: the <b>Beveridge&#8209;Nelson gap</b>, how far output sits from its long&#8209;run trend, and the <b>production&#8209;function gap</b>, how far output sits from what the economy's labor and capital could normally produce. The <b>Unobserved Components (UC) model</b> gives a simpler, complementary estimate — the same model that also produces the equilibrium real interest rate, r*.</p>
+      <div class="reference-lines">
+        <p>BN and PF gaps based on M.T. Kiley (2013), &ldquo;Output gaps,&rdquo; <i>Journal of Macroeconomics</i>, 37, 1&ndash;18.</p>
+        <p>UC gap based on M.T. Kiley (2020), &ldquo;What Can the Data Tell Us about the Equilibrium Real Interest Rate?,&rdquo; <i>International Journal of Central Banking</i>, 16(3), 181&ndash;209.</p>
+      </div>
+      <p class="asof" id="asof-line">As of &mdash;</p>
+    </div>
+
+    <section class="stat-row" id="stat-row"></section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Output gap estimates, 1984&ndash;present</div>
+          <div class="chart-caption">Percent of potential output, quarterly &mdash; colored band is the UC gap's &plusmn;2 std dev range; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-full"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-full" viewBox="0 0 960 400" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-full"></div>
+      </div>
+      <p class="band-caveat">The UC gap's shaded band reflects uncertainty in the estimate <i>given</i> the model's estimated parameters — it does not include uncertainty about the parameters themselves, so it understates the gap's true uncertainty. CBO and EDO don't publish a comparable band for their estimates.</p>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Recent path</div>
+          <div class="chart-caption">Last 10 years &mdash; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-recent"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-recent" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-recent"></div>
+      </div>
+    </section>
+
+    <footer class="methodology">
+      <div class="disclaimer">For informational purposes only. All downloads and calculations are the author&rsquo;s own and may contain errors &mdash; don&rsquo;t rely on this for decisions or conclusions. Verify independently with your own data and calculations before using it for any purpose.</div>
+      <div><b>CBO Output Gap</b> &mdash; 100&times;(real GDP / CBO real potential GDP &minus; 1); CBO's own percent-of-potential convention.</div>
+      <div><b>EDO BN Gap</b> &mdash; the model's Beveridge&#8209;Nelson decomposition: deviation of output from its long-run stochastic trend.</div>
+      <div><b>EDO PF Gap</b> &mdash; the model's production-function decomposition: deviation of output from the level consistent with current technology and normal utilization of capital and labor.</div>
+      <div>EDO estimates use the <b>current-analysis</b> treatment: every one of the model's 13 observables is HP-detrended (&lambda;=128000) and re-anchored to the model's own steady-state constants before being Kalman-smoothed, rather than compared to a fixed trend estimated only through 2011:Q4. A paper-exact replication (no detrending) is also maintained; see the <code>output_gap</code> project.</div>
+      <div><b>UC Gap</b> &mdash; the output gap from a compact Unobserved Components model of GDP growth, unemployment, inflation, long&#8209;run inflation expectations, and the fed funds rate. The same model estimates the equilibrium real interest rate, r*. Estimated with re-optimized (posterior-mode) parameters each update, unlike EDO's fixed parameters.</div>
+      <div id="cbo-reference-note"></div>
+      <div class="references-block">
+        <div class="references-label">References</div>
+        <div>M.T. Kiley (2013), &ldquo;Output gaps,&rdquo; <i>Journal of Macroeconomics</i>, 37, 1&ndash;18. &mdash; BN and PF gaps.</div>
+        <div>M.T. Kiley (2020), &ldquo;What Can the Data Tell Us about the Equilibrium Real Interest Rate?,&rdquo; <i>International Journal of Central Banking</i>, 16(3), 181&ndash;209. &mdash; UC gap.</div>
+      </div>
+      <div class="sources" id="sources-line"></div>
+    </footer>
+  </section>
+
+  <section class="tab-panel" id="panel-risk" hidden>
+    <div class="masthead">
+      <p class="subtitle">How likely — and how large — a sharp rise in unemployment looks from here.</p>
+      <p class="citation">Two models built by economist Michael Kiley estimate the risk of a large increase in the unemployment rate, the closest single indicator to a U.S. recession. The <b>Full Model</b> combines the unemployment rate, inflation, credit growth, and two financial spreads; the <b>Financial Model</b> uses only the corporate&#8209;bond and yield&#8209;curve spreads, the more conventional recession&#8209;prediction approach. Each is shown as a <b>probability</b> — the chance unemployment rises by an unusually large amount — at both a 1&#8209;year and a 3&#8209;year horizon, plus the <b>implied size</b> of that increase if it happens.</p>
+      <div class="reference-lines">
+        <p>Based on M.T. Kiley (2021), &ldquo;Unemployment Risk,&rdquo; <i>Journal of Money, Credit and Banking</i>, 54(5), 1407&ndash;1424.</p>
+        <p>See also &ldquo;Financial and Macroeconomic Indicators of Recession Risk,&rdquo; FEDS Notes, Board of Governors of the Federal Reserve System (2022).</p>
+      </div>
+      <p class="asof" id="risk-asof-line">As of &mdash;</p>
+    </div>
+
+    <section class="stat-row" id="risk-stat-row"></section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Risk of a large unemployment increase — 1 year ahead</div>
+          <div class="chart-caption">Probability, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-risk-h4"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-risk-h4" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-risk-h4"></div>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Risk of a large unemployment increase — 3 years ahead</div>
+          <div class="chart-caption">Probability, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-risk-h12"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-risk-h12" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-risk-h12"></div>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Implied size of the increase, if it happens</div>
+          <div class="chart-caption">Percentage points, Full Model only, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-risk-mag"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-risk-mag" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-risk-mag"></div>
+      </div>
+    </section>
+
+    <footer class="methodology">
+      <div class="disclaimer">For informational purposes only. All downloads and calculations are the author&rsquo;s own and may contain errors &mdash; don&rsquo;t rely on this for decisions or conclusions. Verify independently with your own data and calculations before using it for any purpose.</div>
+      <div><b>Probability</b> &mdash; from a logistic regression: the modeled chance that the unemployment rate rises, over the given horizon, by more than its own historical 80th&#8209;percentile move (&#8776;&#190; point at 1 year, &#8776;2 points at 3 years) &mdash; roughly the size of move that has always accompanied a recession.</div>
+      <div><b>Implied size</b> &mdash; from a quantile regression (80th percentile) on the same variables: not whether a large move happens, but how large it would be, in percentage points, at that percentile.</div>
+      <div><b>Full Model</b> &mdash; unemployment rate, PCE inflation, growth in credit relative to GDP, the Baa corporate&#8209;bond spread, and the 10&#8209;year&#8209;Treasury&#8209;minus&#8209;fed&#8209;funds term spread.</div>
+      <div><b>Financial Model</b> &mdash; the corporate&#8209;bond spread and term spread only, the conventional financial&#8209;variables approach to recession prediction.</div>
+      <div>Coefficients are re-estimated each update on an expanding window back to 1965:Q1, with 2020:Q1&ndash;2020:Q4 excluded from estimation (both as the starting quarter and whenever the forward&#8209;looking outcome itself falls in that window) so the COVID unemployment spike doesn't distort the fit; a paper-exact replication (fixed 1965:Q1&ndash;2019:Q4 sample) is also maintained. The Full Model can lag a quarter or two behind the Financial Model, since it needs BIS credit&#8209;to&#8209;GDP data that publishes with a delay. See the <code>output_gap/unemployment_risk</code> project.</div>
+      <div class="references-block">
+        <div class="references-label">References</div>
+        <div>M.T. Kiley (2021), &ldquo;Unemployment Risk,&rdquo; <i>Journal of Money, Credit and Banking</i>, 54(5), 1407&ndash;1424.</div>
+        <div>&ldquo;Financial and Macroeconomic Indicators of Recession Risk,&rdquo; FEDS Notes, Board of Governors of the Federal Reserve System (2022).</div>
+      </div>
+      <div class="sources" id="risk-sources-line"></div>
+    </footer>
+  </section>
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+const SERIES = [
+  { key: "cbo",  label: "CBO Output Gap", color: "var(--series-cbo)", tileLabel: "CBO Output Gap" },
+  { key: "bn",   label: "EDO BN Gap",     color: "var(--series-bn)",  tileLabel: "EDO BN Gap" },
+  { key: "pf",   label: "EDO PF Gap",     color: "var(--series-pf)",  tileLabel: "EDO PF Gap" },
+  { key: "uc",   label: "UC Gap",         color: "var(--series-uc)",  tileLabel: "UC Gap" },
+];
+
+function fmtPct(v) {
+  if (v === null || v === undefined) return "—";
+  return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
+}
+function fmtDelta(v) {
+  const sign = v >= 0 ? "+" : "−";
+  return sign + Math.abs(v).toFixed(2) + "pp";
+}
+function fmtProb(v) {
+  if (v === null || v === undefined) return "—";
+  return (v * 100).toFixed(0) + "%";
+}
+function fmtProbDelta(v) {
+  const sign = v >= 0 ? "+" : "−";
+  return sign + Math.abs(v * 100).toFixed(1) + "pp";
+}
+function fmtDateLong(d) {
+  const [y, m, day] = d.split("-").map(Number);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[m-1] + " " + day + ", " + y;
+}
+function fmtDateShort(d) {
+  const [y, m] = d.split("-").map(Number);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return months[m-1] + " " + y;
+}
+
+document.getElementById("asof-line").textContent =
+  "Data as of " + fmtDateLong(DATA.as_of) + " · data refreshed " +
+  DATA.run_date.slice(0,4) + "-" + DATA.run_date.slice(4,6) + "-" + DATA.run_date.slice(6,8);
+document.getElementById("sources-line").textContent =
+  "Sources: FRED (GDPC1, GDPPOT) · Federal Reserve Board EDO and UC models, this project's own estimation output · Philadelphia Fed SPF (UC model inflation expectations input). Refreshed run: " + DATA.run_date + ".";
+document.getElementById("risk-asof-line").textContent =
+  "Data as of " + fmtDateLong(DATA.risk_as_of) + " · data refreshed " +
+  DATA.run_date.slice(0,4) + "-" + DATA.run_date.slice(4,6) + "-" + DATA.run_date.slice(6,8);
+document.getElementById("risk-sources-line").textContent =
+  "Sources: FRED (UNRATE, PCEPI, BAA, GS10, FEDFUNDS) · BIS credit-to-GDP ratio via FRED (QUSPAM770A) · this project's own quantile and logistic regression estimates. Refreshed run: " + DATA.run_date + ".";
+
+// ---- tab switching ----
+(function () {
+  const buttons = document.querySelectorAll(".tab-button");
+  const panels = { gap: document.getElementById("panel-gap"), risk: document.getElementById("panel-risk") };
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      Object.entries(panels).forEach(([key, panel]) => {
+        panel.hidden = key !== btn.dataset.tab;
+      });
+      window.dispatchEvent(new Event("resize"));
+    });
+  });
+})();
+
+// ---- CBO reference-year check (mechanical, not statistical -- see 00_fetch_cbo_gap.py) ----
+(function () {
+  const warningEl = document.getElementById("cbo-warning");
+  const noteEl = document.getElementById("cbo-reference-note");
+  const c1 = DATA.cbo_gdpc1_reference_year, cp = DATA.cbo_gdppot_reference_year;
+  if (DATA.cbo_reference_year_mismatch) {
+    warningEl.innerHTML = `<b>Note:</b> BEA's real GDP is currently chained ${c1} dollars, but CBO's potential GDP is still chained ${cp} dollars — CBO hasn't re-benchmarked to BEA's latest base year yet. The CBO gap below likely carries a spurious, non-cyclical level shift from this mismatch, on top of any real change in resource utilization. No automatic correction has been applied — treat the level with caution until CBO updates GDPPOT.`;
+    warningEl.classList.add("visible");
+  } else {
+    noteEl.textContent = `GDPC1 and GDPPOT are both chained ${c1} dollars as of this run — no base-year mismatch detected.`;
+  }
+})();
+
+// ---- shared date-comparison helpers ----
+function indexOneYearAgo(dates) {
+  const [ly, lm] = dates[dates.length - 1].split("-").map(Number);
+  const targetY = ly - 1;
+  for (let i = 0; i < dates.length; i++) {
+    const [y, m] = dates[i].split("-").map(Number);
+    if (y === targetY && m === lm) return i;
+  }
+  return null;
+}
+function periodAverage(dates, values, start, end) {
+  let sum = 0, count = 0;
+  for (let i = 0; i < dates.length; i++) {
+    if (dates[i] >= start && dates[i] <= end && values[i] !== null && values[i] !== undefined) { sum += values[i]; count++; }
+  }
+  return count ? sum / count : null;
+}
+function deltaHelpers(dates) {
+  return {
+    n: dates.length,
+    idx1yr: indexOneYearAgo(dates),
+  };
+}
+function deltaRowsFor(dates, values, helpers) {
+  // Sample-average comparison deliberately omitted: each of these gap
+  // concepts is defined around a zero steady state, so "vs. zero" (the
+  // value itself) already is the comparison point -- a sample-average
+  // comparison would be redundant at best, misleading at worst.
+  const { n, idx1yr } = helpers;
+  const last = values[n - 1];
+  const rows = [];
+  if (idx1yr !== null && values[idx1yr] !== null && values[idx1yr] !== undefined) {
+    rows.push({ label: "vs. 1 yr ago", value: fmtDelta(last - values[idx1yr]) });
+  }
+  return rows;
+}
+
+function tile(label, value, deltaRows, color, note) {
+  const el = document.createElement("div");
+  el.className = "stat-tile";
+  const swatch = color ? `<span class="swatch" style="background:${color}"></span>` : "";
+  const rows = deltaRows.map(r => `
+    <div class="delta-row"><span class="dk">${r.label}</span><span class="dv">${r.value}</span></div>
+  `).join("");
+  el.innerHTML = `
+    <div class="label">${swatch}${label}</div>
+    <div class="value">${value}</div>
+    <div class="deltas">${rows}</div>
+    ${note ? `<div class="tile-note">${note}</div>` : ""}
+  `;
+  return el;
+}
+
+function buildLegend(el, series) {
+  el.innerHTML = series.map(s => `
+    <span class="item">
+      <span class="swatch-line" style="background:${s.color}"></span>
+      ${s.label}
+    </span>
+  `).join("");
+}
+
+function yearTicks(dates, everyN) {
+  const ticks = [];
+  let lastYear = null;
+  dates.forEach((d, i) => {
+    const yr = parseInt(d.slice(0, 4), 10);
+    if (yr !== lastYear && yr % everyN === 0) { ticks.push({ index: i, label: String(yr) }); lastYear = yr; }
+    else if (yr !== lastYear) { lastYear = yr; }
+  });
+  return ticks;
+}
+
+// ---- NBER recession-band index lookup (dates are sorted ISO strings, so
+// lexicographic and chronological comparison agree) ----
+function indexAtOrBefore(dates, target) {
+  let idx = 0;
+  for (let i = 0; i < dates.length; i++) {
+    if (dates[i] <= target) idx = i; else break;
+  }
+  return idx;
+}
+function indexAtOrAfter(dates, target) {
+  for (let i = 0; i < dates.length; i++) {
+    if (dates[i] >= target) return i;
+  }
+  return dates.length - 1;
+}
+
+// ---- chart renderer (skips null/undefined points) ----
+function renderChart(svg, tooltip, dates, seriesData, opts) {
+  const axisFmt = opts.axisFmt || (v => (v >= 0 ? "" : "−") + Math.abs(v).toFixed(1) + "%");
+  const fmt = opts.fmt || fmtPct;
+  const W = opts.w, H = opts.h;
+  const padL = 40, padR = 12, padT = 14, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const nPts = dates.length;
+
+  let vmin = Infinity, vmax = -Infinity;
+  seriesData.forEach(s => s.values.forEach(v => {
+    if (v === null || v === undefined) return;
+    if (v < vmin) vmin = v; if (v > vmax) vmax = v;
+  }));
+  if (opts.band) {
+    opts.band.lower.forEach(v => { if (v < vmin) vmin = v; });
+    opts.band.upper.forEach(v => { if (v > vmax) vmax = v; });
+  }
+  const vpad = (vmax - vmin) * 0.12 || 0.5;
+  vmin -= vpad; vmax += vpad;
+
+  const x = i => padL + (nPts === 1 ? 0 : (i / (nPts - 1)) * plotW);
+  const y = v => padT + plotH - ((v - vmin) / (vmax - vmin)) * plotH;
+
+  const ns = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  svg.innerHTML = "";
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  if (opts.recessions) {
+    opts.recessions.forEach(([start, end]) => {
+      if (end < dates[0] || start > dates[dates.length - 1]) return;
+      const i0 = indexAtOrBefore(dates, start);
+      const i1 = indexAtOrAfter(dates, end);
+      const xx0 = x(i0), xx1 = x(i1);
+      svg.appendChild(el("rect", {
+        x: xx0, y: padT, width: Math.max(xx1 - xx0, 1), height: plotH, class: "recession-band"
+      }));
+    });
+  }
+
+  const rawStep = (vmax - vmin) / 5;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const steps = [1, 2, 2.5, 5, 10].map(m => m * mag);
+  const step = steps.find(s => (vmax - vmin) / s <= 6) || steps[steps.length - 1];
+  const gStart = Math.ceil(vmin / step) * step;
+  for (let v = gStart; v <= vmax; v += step) {
+    const yy = y(v);
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: yy, y2: yy, class: "grid-line" }));
+    const label = el("text", { x: padL - 8, y: yy + 3.5, class: "axis-label", "text-anchor": "end" });
+    label.textContent = axisFmt(v);
+    svg.appendChild(label);
+  }
+  if (vmin < 0 && vmax > 0) {
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: y(0), y2: y(0), class: "zero-line" }));
+  }
+
+  opts.xTicks.forEach(({ index, label }) => {
+    const xx = x(index);
+    const lbl = el("text", { x: xx, y: H - 6, class: "axis-label", "text-anchor": "middle" });
+    lbl.textContent = label;
+    svg.appendChild(lbl);
+  });
+
+  if (opts.band) {
+    const { lower, upper, color } = opts.band;
+    let bandPath = "";
+    upper.forEach((v, i) => { bandPath += (i === 0 ? "M" : "L") + x(i).toFixed(2) + "," + y(v).toFixed(2) + " "; });
+    for (let i = lower.length - 1; i >= 0; i--) { bandPath += "L" + x(i).toFixed(2) + "," + y(lower[i]).toFixed(2) + " "; }
+    bandPath += "Z";
+    svg.appendChild(el("path", { d: bandPath, class: "band-fill", fill: color }));
+  }
+
+  seriesData.forEach(s => {
+    let d = "";
+    let open = false;
+    s.values.forEach((v, i) => {
+      if (v === null || v === undefined) { open = false; return; }
+      d += (open ? "L" : "M") + x(i).toFixed(2) + "," + y(v).toFixed(2) + " ";
+      open = true;
+    });
+    svg.appendChild(el("path", { d, class: "series-path", stroke: s.color }));
+  });
+
+  const withEnd = seriesData
+    .map(s => {
+      let lastIdx = -1;
+      for (let i = s.values.length - 1; i >= 0; i--) {
+        if (s.values[i] !== null && s.values[i] !== undefined) { lastIdx = i; break; }
+      }
+      return lastIdx >= 0 ? { s, lastIdx, lastV: s.values[lastIdx] } : null;
+    })
+    .filter(Boolean);
+
+  const minGap = 13;
+  const endPositions = withEnd.map(e => ({ ...e, y: y(e.lastV) })).sort((a, b) => a.y - b.y);
+  for (let pass = 0; pass < endPositions.length; pass++) {
+    for (let i = 1; i < endPositions.length; i++) {
+      const gap = endPositions[i].y - endPositions[i - 1].y;
+      if (gap < minGap) {
+        const push = (minGap - gap) / 2;
+        endPositions[i - 1].y -= push;
+        endPositions[i].y += push;
+      }
+    }
+  }
+  endPositions.forEach(({ s, lastV, y: labelY }) => {
+    const lbl = el("text", { x: W - padR + 4, y: labelY + 4, class: "end-label", fill: s.color });
+    lbl.textContent = fmt(lastV);
+    svg.appendChild(lbl);
+  });
+
+  const hoverLine = el("line", { x1: 0, x2: 0, y1: padT, y2: H - padB, class: "hover-line" });
+  svg.appendChild(hoverLine);
+  const dots = seriesData.map(s => {
+    const c = el("circle", { class: "hover-dot", fill: s.color });
+    svg.appendChild(c);
+    return c;
+  });
+  const overlay = el("rect", { x: padL, y: padT, width: plotW, height: plotH, class: "overlay" });
+  svg.appendChild(overlay);
+
+  function handleMove(clientX, clientY) {
+    const rect = svg.getBoundingClientRect();
+    const px = ((clientX - rect.left) / rect.width) * W;
+    let idx = Math.round(((px - padL) / plotW) * (nPts - 1));
+    idx = Math.max(0, Math.min(nPts - 1, idx));
+
+    hoverLine.setAttribute("x1", x(idx)); hoverLine.setAttribute("x2", x(idx)); hoverLine.style.opacity = 1;
+    const rows = [];
+    seriesData.forEach((s, i) => {
+      const v = s.values[idx];
+      const has = v !== null && v !== undefined;
+      dots[i].style.opacity = has ? 1 : 0;
+      if (has) {
+        dots[i].setAttribute("cx", x(idx)); dots[i].setAttribute("cy", y(v));
+        rows.push(`<div class="t-row"><span class="k"><span class="dot" style="background:${s.color}"></span>${s.label}</span><span class="v">${fmt(v)}</span></div>`);
+      }
+    });
+    if (opts.band) {
+      rows.push(`<div class="t-row"><span class="k">&plusmn;2 std dev</span><span class="v">${fmt(opts.band.lower[idx])} to ${fmt(opts.band.upper[idx])}</span></div>`);
+    }
+
+    tooltip.innerHTML = `<div class="t-date">${fmtDateLong(dates[idx])}</div>${rows.join("")}`;
+    tooltip.style.opacity = 1;
+
+    const tw = tooltip.offsetWidth, containerW = rect.width;
+    let left = (x(idx) / W) * containerW + 14;
+    if (left + tw > containerW - 4) left = (x(idx) / W) * containerW - tw - 14;
+    tooltip.style.left = left + "px";
+    tooltip.style.top = "8px";
+  }
+  function handleLeave() {
+    hoverLine.style.opacity = 0;
+    dots.forEach(d => d.style.opacity = 0);
+    tooltip.style.opacity = 0;
+  }
+
+  overlay.addEventListener("pointermove", e => handleMove(e.clientX, e.clientY));
+  overlay.addEventListener("pointerleave", handleLeave);
+  overlay.addEventListener("touchmove", e => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+}
+
+(function () {
+  const dates = DATA.dates;
+  const helpers = deltaHelpers(dates);
+  const statRow = document.getElementById("stat-row");
+  SERIES.forEach(s => {
+    const v = DATA[s.key];
+    // Trailing 5-year average, CBO only: a transparent diagnostic (not a
+    // correction) for the base-year-mismatch failure mode -- if this
+    // stays persistently away from zero, check the reference-year note
+    // in the methodology footer below.
+    let note = null;
+    if (s.key === "cbo") {
+      const trailingStart = dates[Math.max(0, helpers.n - 20)];
+      const avg5y = periodAverage(dates, v, trailingStart, dates[helpers.n - 1]);
+      if (avg5y !== null) note = `5-yr avg: ${fmtPct(avg5y)}`;
+    }
+    statRow.appendChild(tile(s.tileLabel, fmtPct(v[helpers.n - 1]), deltaRowsFor(dates, v, helpers), s.color, note));
+  });
+
+  buildLegend(document.getElementById("legend-full"), SERIES);
+  buildLegend(document.getElementById("legend-recent"), SERIES);
+
+  const seriesFull = SERIES.map(s => ({ ...s, values: DATA[s.key] }));
+  const fullBand = { lower: DATA.uc_lower, upper: DATA.uc_upper, color: "var(--series-uc)" };
+  renderChart(document.getElementById("chart-full"), document.getElementById("tooltip-full"),
+    dates, seriesFull, { w: 960, h: 400, xTicks: yearTicks(dates, 5), band: fullBand, recessions: DATA.recessions });
+
+  const recentN = 41;
+  const recentDates = dates.slice(-recentN);
+  const seriesRecent = SERIES.map(s => ({ ...s, values: DATA[s.key].slice(-recentN) }));
+  renderChart(document.getElementById("chart-recent"), document.getElementById("tooltip-recent"),
+    recentDates, seriesRecent, { w: 960, h: 320, xTicks: yearTicks(recentDates, 1), recessions: DATA.recessions });
+
+  window.addEventListener("resize", () => {
+    renderChart(document.getElementById("chart-full"), document.getElementById("tooltip-full"), dates, seriesFull, { w: 960, h: 400, xTicks: yearTicks(dates, 5), band: fullBand, recessions: DATA.recessions });
+    renderChart(document.getElementById("chart-recent"), document.getElementById("tooltip-recent"), recentDates, seriesRecent, { w: 960, h: 320, xTicks: yearTicks(recentDates, 1), recessions: DATA.recessions });
+  });
+})();
+
+// ---- Recession and Unemployment Risk tab ----
+(function () {
+  const dates = DATA.risk_dates;
+
+  const MODEL_SERIES = [
+    { key: "full5", label: "Full Model", color: "var(--series-risk-full5)" },
+    { key: "fin2", label: "Financial Model", color: "var(--series-risk-fin2)" },
+  ];
+  const MAG_SERIES = [
+    { key: "h4", label: "1-year horizon", color: "var(--series-risk-mag-h4)" },
+    { key: "h12", label: "3-year horizon", color: "var(--series-risk-mag-h12)" },
+  ];
+
+  function lastKnownIndex(values) {
+    for (let i = values.length - 1; i >= 0; i--) {
+      if (values[i] !== null && values[i] !== undefined) return i;
+    }
+    return -1;
+  }
+  function lastKnown(values) {
+    const i = lastKnownIndex(values);
+    return i < 0 ? null : values[i];
+  }
+  function indexOneYearBefore(idx) {
+    const [ty, tm] = dates[idx].split("-").map(Number);
+    const targetY = ty - 1;
+    for (let i = 0; i <= idx; i++) {
+      const [y, m] = dates[i].split("-").map(Number);
+      if (y === targetY && m === tm) return i;
+    }
+    return null;
+  }
+  function probDeltaRows(values) {
+    // Anchored to this series' own latest known value, not the shared
+    // array's last index -- full5 lags fin2 by a few quarters (BIS
+    // credit/GDP data lag), so they don't share a common "latest" date.
+    const lastIdx = lastKnownIndex(values);
+    if (lastIdx < 0) return [];
+    const priorIdx = indexOneYearBefore(lastIdx);
+    if (priorIdx === null || values[priorIdx] === null || values[priorIdx] === undefined) return [];
+    return [{ label: "vs. 1 yr ago", value: fmtProbDelta(values[lastIdx] - values[priorIdx]) }];
+  }
+
+  const statRow = document.getElementById("risk-stat-row");
+  [
+    { label: "1-Yr Risk — Full Model", key: "risk_prob_full5_h4", color: "var(--series-risk-full5)" },
+    { label: "1-Yr Risk — Financial Model", key: "risk_prob_fin2_h4", color: "var(--series-risk-fin2)" },
+  ].forEach(t => {
+    const v = DATA[t.key];
+    statRow.appendChild(tile(t.label, fmtProb(lastKnown(v)), probDeltaRows(v), t.color, null));
+  });
+
+  buildLegend(document.getElementById("legend-risk-h4"), MODEL_SERIES);
+  buildLegend(document.getElementById("legend-risk-h12"), MODEL_SERIES);
+  buildLegend(document.getElementById("legend-risk-mag"), MAG_SERIES);
+
+  const probAxisFmt = v => Math.round(v * 100) + "%";
+  const ppAxisFmt = v => (v >= 0 ? "" : "−") + Math.abs(v).toFixed(1) + "pp";
+
+  const seriesH4 = [
+    { ...MODEL_SERIES[0], values: DATA.risk_prob_full5_h4 },
+    { ...MODEL_SERIES[1], values: DATA.risk_prob_fin2_h4 },
+  ];
+  const seriesH12 = [
+    { ...MODEL_SERIES[0], values: DATA.risk_prob_full5_h12 },
+    { ...MODEL_SERIES[1], values: DATA.risk_prob_fin2_h12 },
+  ];
+  const seriesMag = [
+    { ...MAG_SERIES[0], values: DATA.risk_magnitude_full5_h4 },
+    { ...MAG_SERIES[1], values: DATA.risk_magnitude_full5_h12 },
+  ];
+
+  function renderAll() {
+    renderChart(document.getElementById("chart-risk-h4"), document.getElementById("tooltip-risk-h4"),
+      dates, seriesH4, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
+    renderChart(document.getElementById("chart-risk-h12"), document.getElementById("tooltip-risk-h12"),
+      dates, seriesH12, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
+    renderChart(document.getElementById("chart-risk-mag"), document.getElementById("tooltip-risk-mag"),
+      dates, seriesMag, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtDelta, axisFmt: ppAxisFmt, recessions: DATA.recessions });
+  }
+  renderAll();
+  window.addEventListener("resize", renderAll);
+})();
+</script>
+</body>
+</html>
