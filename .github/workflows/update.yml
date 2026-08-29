@@ -15,14 +15,13 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v4
 
-      # Private compute repo -- edo/rstar/unemployment_risk each run their
-      # own pipeline on their own schedule and commit outputs there; this
-      # job just reads whatever is currently at HEAD.
-      - name: Checkout output_gap (private, read-only)
+      # edo/rstar/unemployment_risk each run their own pipeline on their
+      # own schedule and commit outputs there; this job just reads
+      # whatever is currently at HEAD.
+      - name: Checkout output_gap
         uses: actions/checkout@v4
         with:
           repository: michaeltkiley/output_gap
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
           path: output_gap
 
       - name: Set up Python
