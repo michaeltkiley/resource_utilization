@@ -9,7 +9,7 @@ and the `CROSS_REPO_TOKEN` deployment setup.
 Two tabs:
 
 - **Resource Utilization** — four output-gap estimates, side by side: the
-  CBO's production-function gap, the Federal Reserve Board's EDO model's
+  CBO's production-function gap, a structural macroeconomic model's
   Beveridge-Nelson (BN) and production-function (PF) gaps, and the rstar
   project's Unobserved Components (UC) gap (with a &plusmn;2 std dev
   filtering-uncertainty band).

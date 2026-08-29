@@ -334,7 +334,7 @@
     <p class="warning-banner" id="cbo-warning"></p>
     <div class="masthead">
       <p class="subtitle">How far is output from its potential — four ways of answering the same question.</p>
-      <p class="citation">The CBO gap comes from the Congressional Budget Office's own model of potential GDP. The other three come from two models built by economist Michael Kiley. The <b>EDO model</b> gives two: the <b>Beveridge&#8209;Nelson gap</b>, how far output sits from its long&#8209;run trend, and the <b>production&#8209;function gap</b>, how far output sits from what the economy's labor and capital could normally produce. The <b>Unobserved Components (UC) model</b> gives a simpler, complementary estimate — the same model that also produces the equilibrium real interest rate, r*.</p>
+      <p class="citation">The CBO gap comes from the Congressional Budget Office's own model of potential GDP. The other three come from two models built by economist Michael Kiley. The <b>structural model</b> gives two: the <b>Beveridge&#8209;Nelson gap</b>, how far output sits from its long&#8209;run trend, and the <b>production&#8209;function gap</b>, how far output sits from what the economy's labor and capital could normally produce. The <b>Unobserved Components (UC) model</b> gives a simpler, complementary estimate — the same model that also produces the equilibrium real interest rate, r*.</p>
       <div class="reference-lines">
         <p>BN and PF gaps based on M.T. Kiley (2013), &ldquo;Output gaps,&rdquo; <i>Journal of Macroeconomics</i>, 37, 1&ndash;18.</p>
         <p>UC gap based on M.T. Kiley (2020), &ldquo;What Can the Data Tell Us about the Equilibrium Real Interest Rate?,&rdquo; <i>International Journal of Central Banking</i>, 16(3), 181&ndash;209.</p>
@@ -356,7 +356,7 @@
         <svg class="chart" id="chart-full" viewBox="0 0 960 400" preserveAspectRatio="xMidYMid meet"></svg>
         <div class="tooltip" id="tooltip-full"></div>
       </div>
-      <p class="band-caveat">The UC gap's shaded band reflects uncertainty in the estimate <i>given</i> the model's estimated parameters — it does not include uncertainty about the parameters themselves, so it understates the gap's true uncertainty. CBO and EDO don't publish a comparable band for their estimates.</p>
+      <p class="band-caveat">The UC gap's shaded band reflects uncertainty in the estimate <i>given</i> the model's estimated parameters — it does not include uncertainty about the parameters themselves, so it understates the gap's true uncertainty. CBO and the structural model don't publish a comparable band for their estimates.</p>
     </section>
 
     <section class="chart-card">
@@ -376,10 +376,11 @@
     <footer class="methodology">
       <div class="disclaimer">For informational purposes only. All downloads and calculations are the author&rsquo;s own and may contain errors &mdash; don&rsquo;t rely on this for decisions or conclusions. Verify independently with your own data and calculations before using it for any purpose. The analysis and views presented are the author&rsquo;s own and do not reflect the views of any institution with which he is affiliated.</div>
       <div><b>CBO Output Gap</b> &mdash; 100&times;(real GDP / CBO real potential GDP &minus; 1); CBO's own percent-of-potential convention.</div>
-      <div><b>EDO BN Gap</b> &mdash; the model's Beveridge&#8209;Nelson decomposition: deviation of output from its long-run stochastic trend.</div>
-      <div><b>EDO PF Gap</b> &mdash; the model's production-function decomposition: deviation of output from the level consistent with current technology and normal utilization of capital and labor.</div>
-      <div>EDO estimates use the <b>current-analysis</b> treatment: every one of the model's 13 observables is HP-detrended (&lambda;=128000) and re-anchored to the model's own steady-state constants before being Kalman-smoothed, rather than compared to a fixed trend estimated only through 2011:Q4. A paper-exact replication (no detrending) is also maintained; see the <code>output_gap</code> project.</div>
-      <div><b>UC Gap</b> &mdash; the output gap from a compact Unobserved Components model of GDP growth, unemployment, inflation, long&#8209;run inflation expectations, and the fed funds rate. The same model estimates the equilibrium real interest rate, r*. Estimated with re-optimized (posterior-mode) parameters each update, unlike EDO's fixed parameters.</div>
+      <div><b>Structural model</b> &mdash; the Federal Reserve Board's EDO model (Chung, Kiley &amp; Laforte).</div>
+      <div><b>Structural BN Gap</b> &mdash; the model's Beveridge&#8209;Nelson decomposition: deviation of output from its long-run stochastic trend.</div>
+      <div><b>Structural PF Gap</b> &mdash; the model's production-function decomposition: deviation of output from the level consistent with current technology and normal utilization of capital and labor.</div>
+      <div>Structural-model estimates use the <b>current-analysis</b> treatment: every one of the model's 13 observables is HP-detrended (&lambda;=128000) and re-anchored to the model's own steady-state constants before being Kalman-smoothed, rather than compared to a fixed trend estimated only through 2011:Q4. A paper-exact replication (no detrending) is also maintained; see the <code>output_gap</code> project.</div>
+      <div><b>UC Gap</b> &mdash; the output gap from a compact Unobserved Components model of GDP growth, unemployment, inflation, long&#8209;run inflation expectations, and the fed funds rate. The same model estimates the equilibrium real interest rate, r*. Estimated with re-optimized (posterior-mode) parameters each update, unlike the structural model's fixed parameters.</div>
       <div id="cbo-reference-note"></div>
       <div class="references-block">
         <div class="references-label">References</div>
@@ -467,8 +468,8 @@ const DATA = __DATA_JSON__;
 
 const SERIES = [
   { key: "cbo",  label: "CBO Output Gap", color: "var(--series-cbo)", tileLabel: "CBO Output Gap" },
-  { key: "bn",   label: "EDO BN Gap",     color: "var(--series-bn)",  tileLabel: "EDO BN Gap" },
-  { key: "pf",   label: "EDO PF Gap",     color: "var(--series-pf)",  tileLabel: "EDO PF Gap" },
+  { key: "bn",   label: "Structural BN Gap", color: "var(--series-bn)",  tileLabel: "Structural BN Gap" },
+  { key: "pf",   label: "Structural PF Gap", color: "var(--series-pf)",  tileLabel: "Structural PF Gap" },
   { key: "uc",   label: "UC Gap",         color: "var(--series-uc)",  tileLabel: "UC Gap" },
 ];
 
@@ -503,7 +504,7 @@ document.getElementById("asof-line").textContent =
   "Data as of " + fmtDateLong(DATA.as_of) + " · data refreshed " +
   DATA.run_date.slice(0,4) + "-" + DATA.run_date.slice(4,6) + "-" + DATA.run_date.slice(6,8);
 document.getElementById("sources-line").textContent =
-  "Sources: FRED (GDPC1, GDPPOT) · Federal Reserve Board EDO and UC models, this project's own estimation output · Philadelphia Fed SPF (UC model inflation expectations input). Refreshed run: " + DATA.run_date + ".";
+  "Sources: FRED (GDPC1, GDPPOT) · structural and UC models, this project's own estimation output · Philadelphia Fed SPF (UC model inflation expectations input). Refreshed run: " + DATA.run_date + ".";
 document.getElementById("risk-asof-line").textContent =
   "Data as of " + fmtDateLong(DATA.risk_as_of) + " · data refreshed " +
   DATA.run_date.slice(0,4) + "-" + DATA.run_date.slice(4,6) + "-" + DATA.run_date.slice(6,8);
