@@ -2,9 +2,9 @@
 
 Served at `michaeltkiley.github.io/resource_utilization/`, same shape as
 `termprem` and `monetary_policy_surprises`. Reads its three model inputs
-from `michaeltkiley/output_gap` (private) rather than computing them
-itself -- see that repo's README for the `edo`/`rstar`/`unemployment_risk`
-pipelines and the `CROSS_REPO_TOKEN` deployment setup.
+from `michaeltkiley/output_gap` rather than computing them itself -- see
+that repo's README for the `edo`/`rstar`/`unemployment_risk` pipelines
+and the `CROSS_REPO_TOKEN` deployment setup.
 
 Two tabs:
 
