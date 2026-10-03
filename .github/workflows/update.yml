@@ -50,9 +50,9 @@ jobs:
           git diff --quiet --cached || git commit -m "Auto-update dashboard [skip ci]"
           for i in 1 2 3 4 5; do
             git push && break
-            git fetch origin main
-            git rebase origin/main
+            git pull --rebase --autostash origin main
           done
+          git push  # fails the step if every retry was rejected
 
       # Runs *after* publishing, on purpose (see dashboard's README "CBO
       # reference-year check"): the dashboard has already published the
