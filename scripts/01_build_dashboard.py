@@ -4,8 +4,14 @@ PF gap, r* model UC gap) from the latest CBO fetch and the EDO/rstar
 projects' current-analysis outputs. Self-contained static page (see
 dashboard_template.html).
 
+The Recession and Unemployment Risk tab adds, on top of the upstream
+unemployment_risk outputs, a no-credit variant of the Full Model and
+fitted outcome distributions, both computed here from upstream's
+observables.csv -- see risk_variants.py.
+
 Usage:
     python3 01_build_dashboard.py [--cbo-file PATH] [--edo-file PATH] [--rstar-file PATH]
+                                  [--risk-file PATH] [--risk-observables PATH]
 """
 import argparse
 import csv
@@ -17,6 +23,8 @@ from pathlib import Path
 
 import requests
 
+import risk_variants
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 DASHBOARD_DIR = SCRIPT_DIR.parent
 DATA_DIR = DASHBOARD_DIR / "data"
@@ -25,11 +33,22 @@ PAGES_OUT = DASHBOARD_DIR / "docs" / "index.html"
 EDO_DEFAULT = DASHBOARD_DIR.parent / "edo" / "outputs" / "output_gap.csv"
 RSTAR_DEFAULT = DASHBOARD_DIR.parent / "rstar" / "outputs" / "rstar.csv"
 RISK_DEFAULT = DASHBOARD_DIR.parent / "unemployment_risk" / "outputs" / "unemployment_risk.csv"
+RISK_OBS_DEFAULT = DASHBOARD_DIR.parent / "unemployment_risk" / "data" / "observables.csv"
 
 RISK_COLUMNS = [
     "prob_full5_h4", "prob_fin2_h4", "magnitude_full5_h4",
     "prob_full5_h12", "prob_fin2_h12", "magnitude_full5_h12",
 ]
+NOCREDIT_COLUMNS = [
+    "prob_nocredit_h4", "magnitude_nocredit_h4",
+    "prob_nocredit_h12", "magnitude_nocredit_h12",
+]
+# Which column defines each model's latest available quarter.
+RISK_MODEL_LATEST_COLUMN = {
+    "full5": "prob_full5_h4",
+    "nocredit": "prob_nocredit_h4",
+    "fin2": "prob_fin2_h4",
+}
 
 FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
 
@@ -87,6 +106,12 @@ def read_rstar(path: Path) -> dict:
     return out
 
 
+def quarter_to_date(label: str) -> str:
+    """YYYYQN -> YYYY-MM-DD (quarter start)."""
+    month = {"1": "01", "2": "04", "3": "07", "4": "10"}[label[5]]
+    return f"{label[:4]}-{month}-01"
+
+
 def read_risk(path: Path) -> dict:
     """Unemployment-risk output uses YYYYQN date labels; convert to
     YYYY-MM-DD (quarter start). Values are floats or blank (missing --
@@ -95,9 +120,7 @@ def read_risk(path: Path) -> dict:
     out = {}
     with open(path) as f:
         for row in csv.DictReader(f):
-            y, q = row["date"][:4], row["date"][5]
-            month = {"1": "01", "2": "04", "3": "07", "4": "10"}[q]
-            out[f"{y}-{month}-01"] = {
+            out[quarter_to_date(row["date"])] = {
                 col: (float(row[col]) if row[col] != "" else None)
                 for col in RISK_COLUMNS
             }
@@ -137,6 +160,8 @@ def main():
     ap.add_argument("--edo-file", default=str(EDO_DEFAULT))
     ap.add_argument("--rstar-file", default=str(RSTAR_DEFAULT))
     ap.add_argument("--risk-file", default=str(RISK_DEFAULT))
+    ap.add_argument("--risk-observables", default=str(RISK_OBS_DEFAULT),
+                    help="unemployment_risk's data/observables.csv (for the no-credit variant and fitted distributions)")
     args = ap.parse_args()
 
     cbo_path = Path(args.cbo_file) if args.cbo_file else latest_cbo_file()
@@ -151,11 +176,28 @@ def main():
         raise SystemExit(f"{risk_path} not found -- run the unemployment_risk pipeline first "
                           f"(see output_gap/unemployment_risk/README.md)")
 
+    risk_obs_path = Path(args.risk_observables)
+    if not risk_obs_path.exists():
+        raise SystemExit(f"{risk_obs_path} not found -- run the unemployment_risk pipeline first "
+                          f"(see output_gap/unemployment_risk/README.md)")
+
     cbo = read_cbo(cbo_path)
     cbo_meta = latest_cbo_meta(cbo_path)
     edo = read_edo(edo_path)
     rstar = read_rstar(rstar_path)
     risk = read_risk(risk_path)
+
+    variants = risk_variants.build(risk_obs_path)
+    upstream_by_quarter = {
+        f"{d[:4]}Q{(int(d[5:7]) - 1) // 3 + 1}": v for d, v in risk.items()
+    }
+    for problem in risk_variants.check_full5_matches(variants["full5_q80"], upstream_by_quarter):
+        print(f"WARNING: mirrored Full Model fit disagrees with upstream -- {problem}")
+    for d in risk:
+        risk[d].update({c: None for c in NOCREDIT_COLUMNS})
+    for q, vals in variants["series"].items():
+        d = quarter_to_date(q)
+        risk.setdefault(d, {c: None for c in RISK_COLUMNS + NOCREDIT_COLUMNS}).update(vals)
 
     dates = sorted(set(cbo) & set(edo) & set(rstar))
     if not dates:
@@ -163,8 +205,32 @@ def main():
 
     risk_dates = sorted(risk)
     risk_as_of = max(
-        d for d in risk_dates if any(risk[d][c] is not None for c in RISK_COLUMNS)
+        d for d in risk_dates if any(risk[d][c] is not None for c in RISK_COLUMNS + NOCREDIT_COLUMNS)
     )
+    risk_latest_by_model = {
+        model: max(d for d in risk_dates if risk[d][col] is not None)
+        for model, col in RISK_MODEL_LATEST_COLUMN.items()
+    }
+    risk_pdfs = {
+        label: {
+            "x": [round(v, 4) for v in h["x"]],
+            "quantile_levels": risk_variants.PDF_QUANTILES,
+            "sample": [quarter_to_date(q) for q in h["sample"]],
+            "unconditional": {
+                "quantiles": [round(v, 4) for v in h["unconditional"]["quantiles"]],
+                "pdf": [round(v, 5) for v in h["unconditional"]["pdf"]],
+            },
+            "models": {
+                model: {
+                    "date": quarter_to_date(m["quarter"]),
+                    "quantiles": [round(v, 4) for v in m["quantiles"]],
+                    "pdf": [round(v, 5) for v in m["pdf"]],
+                }
+                for model, m in h["models"].items()
+            },
+        }
+        for label, h in variants["pdfs"].items()
+    }
 
     recessions = fetch_recessions()
 
@@ -189,8 +255,10 @@ def main():
                 (round(risk[d][col], 4) if risk[d][col] is not None else None)
                 for d in risk_dates
             ]
-            for col in RISK_COLUMNS
+            for col in RISK_COLUMNS + NOCREDIT_COLUMNS
         },
+        "risk_latest_by_model": risk_latest_by_model,
+        "risk_pdfs": risk_pdfs,
     }
 
     template = (SCRIPT_DIR / "dashboard_template.html").read_text()

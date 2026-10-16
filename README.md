@@ -16,7 +16,19 @@ Two tabs:
 - **Recession and Unemployment Risk** — probability and implied magnitude
   of a large increase in the unemployment rate, at 1- and 3-year horizons,
   from `../unemployment_risk`'s full (5-variable) and financial-only
-  (2-variable) models.
+  (2-variable) models, plus two additions computed here by
+  `scripts/risk_variants.py` from that project's `data/observables.csv`:
+  - a **Full Model ex. Credit** variant (the full model without
+    credit-to-GDP growth), estimated on the same sample and threshold, so
+    it differs only by that variable and can run a few quarters later;
+  - a **fitted distribution** for each Full Model: quantile regressions at
+    the 10th/20th/50th/80th/90th percentiles at the model's latest quarter,
+    with a Jones-Faddy skewed t fitted to them, shown against the same fit
+    to the unconditional percentiles.
+
+  Each model is reported at its own latest available quarter. The build
+  also refits the upstream Full Model's 80th percentile and prints a
+  warning if it doesn't reproduce upstream's series.
 
 ## Pipeline
 
@@ -26,6 +38,8 @@ scripts/01_build_dashboard.py          reads the latest CBO fetch + output_gap's
                                         rstar/outputs/rstar.csv + unemployment_risk/outputs/unemployment_risk.csv
                                         (each project's current-analysis default),
                                         builds docs/index.html from the template
+scripts/risk_variants.py               imported by 01: no-credit variant + fitted distributions,
+                                        from unemployment_risk/data/observables.csv
 scripts/02_assert_cbo_alignment.py     CI alerting step -- see "CBO reference-year check"
 ```
 
@@ -54,7 +68,8 @@ python3 00_fetch_cbo_gap.py
 python3 01_build_dashboard.py \
   --edo-file ../../output_gap/edo/outputs/output_gap.csv \
   --rstar-file ../../output_gap/rstar/outputs/rstar.csv \
-  --risk-file ../../output_gap/unemployment_risk/outputs/unemployment_risk.csv
+  --risk-file ../../output_gap/unemployment_risk/outputs/unemployment_risk.csv \
+  --risk-observables ../../output_gap/unemployment_risk/data/observables.csv
 ```
 
 ## CBO reference-year check
