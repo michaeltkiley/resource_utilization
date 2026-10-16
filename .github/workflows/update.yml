@@ -40,7 +40,8 @@ jobs:
           python3 scripts/01_build_dashboard.py \
             --edo-file output_gap/edo/outputs/output_gap.csv \
             --rstar-file output_gap/rstar/outputs/rstar.csv \
-            --risk-file output_gap/unemployment_risk/outputs/unemployment_risk.csv
+            --risk-file output_gap/unemployment_risk/outputs/unemployment_risk.csv \
+            --risk-observables output_gap/unemployment_risk/data/observables.csv
 
       - name: Commit and push docs/index.html
         run: |

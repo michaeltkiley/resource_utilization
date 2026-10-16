@@ -35,8 +35,7 @@
     --series-uc: #eda100;
     --series-risk-full5: #e87ba4;
     --series-risk-fin2: #008300;
-    --series-risk-mag-h4: #4a3aa7;
-    --series-risk-mag-h12: #e34948;
+    --series-risk-nocredit: #2a78d6;
     --series-neutral: #8a93a3;
     --warning-bg: #fdf1e9;
     --warning-border: #f0b98a;
@@ -59,8 +58,7 @@
       --series-uc: #c98500;
       --series-risk-full5: #d55181;
       --series-risk-fin2: #008300;
-      --series-risk-mag-h4: #9085e9;
-      --series-risk-mag-h12: #e66767;
+      --series-risk-nocredit: #3987e5;
       --series-neutral: #7c8798;
       --warning-bg: #2b2015;
       --warning-border: #7a4a1e;
@@ -83,8 +81,7 @@
     --series-uc: #c98500;
     --series-risk-full5: #d55181;
     --series-risk-fin2: #008300;
-    --series-risk-mag-h4: #9085e9;
-    --series-risk-mag-h12: #e66767;
+    --series-risk-nocredit: #3987e5;
     --series-neutral: #7c8798;
     --warning-bg: #2b2015;
     --warning-border: #7a4a1e;
@@ -167,7 +164,7 @@
   }
 
   .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  #risk-stat-row { grid-template-columns: repeat(2, minmax(0, 271px)); }
+  #risk-stat-row { grid-template-columns: repeat(3, minmax(0, 271px)); }
   .stat-tile {
     background: var(--surface-card);
     border: 1px solid var(--rule);
@@ -268,8 +265,33 @@
     color: var(--ink-secondary);
   }
 
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .summary-table th, .summary-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  .summary-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+  .summary-table th:first-child, .summary-table td:first-child { text-align: left; }
+  .summary-table td { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .summary-table td:first-child { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }
+  .table-scroll { overflow-x: auto; padding-bottom: 12px; }
+
+  .pdf-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; padding-bottom: 12px; }
+  .pdf-panels > div { min-width: 0; }
+  .pdf-table-wrap { overflow-x: auto; }
+  .pdf-panel-title { font-size: 13px; font-weight: 600; color: var(--ink-secondary); margin: 6px 0 2px; }
+  .pdf-dash { stroke-dasharray: 5 4; }
+  .quantile-tick { stroke-width: 1.5; }
+  .pdf-quantiles { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 4px; }
+  .pdf-quantiles th, .pdf-quantiles td { padding: 3px 4px; text-align: right; white-space: nowrap; }
+  .pdf-quantiles th { font-weight: 500; color: var(--ink-muted); }
+  .pdf-quantiles td { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--ink-secondary); }
+  .pdf-quantiles th:first-child, .pdf-quantiles td:first-child { text-align: left; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+  .swatch-dash { width: 14px; height: 0; border-top: 2px dashed var(--series-neutral); }
+
   @media (max-width: 760px) {
     .stat-row { grid-template-columns: repeat(2, 1fr); }
+    #risk-stat-row { grid-template-columns: 1fr; }
+    .pdf-panels { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) {
     .tooltip { transition: none; }
@@ -407,7 +429,7 @@
   <section class="tab-panel" id="panel-risk" hidden>
     <div class="masthead">
       <p class="subtitle">How likely — and how large — a sharp rise in unemployment looks from here.</p>
-      <p class="citation">Two models built by economist Michael Kiley estimate the risk of a large increase in the unemployment rate, a particularly close indicator of a U.S. recession. The <b>Full Model</b> combines the unemployment rate, inflation, credit growth, and two financial spreads; the <b>Financial Model</b> uses only the corporate&#8209;bond and yield&#8209;curve spreads, the more conventional recession&#8209;prediction approach. Each is shown as a <b>probability</b> — the chance unemployment rises by an unusually large amount — at both a 1&#8209;year and a 3&#8209;year horizon, plus the <b>implied size</b> of that increase if it happens.</p>
+      <p class="citation">Two models built by economist Michael Kiley estimate the risk of a large increase in the unemployment rate, a particularly close indicator of a U.S. recession. The <b>Full Model</b> combines the unemployment rate, inflation, credit growth, and two financial spreads; the <b>Full Model ex. Credit</b> drops credit growth, a check on how much that one variable drives the reading; the <b>Financial Model</b> uses only the corporate&#8209;bond and yield&#8209;curve spreads, the more conventional recession&#8209;prediction approach. Each is shown as a <b>probability</b> — the chance unemployment rises by an unusually large amount — at both a 1&#8209;year and a 3&#8209;year horizon, plus the <b>implied size</b> of that increase if it happens and, for the two Full Models, the whole <b>distribution</b> of the change in unemployment. Models can end in different quarters: credit data publish with a lag, so the Full Model ends a few quarters before the others.</p>
       <div class="reference-lines">
         <p>Based on M.T. Kiley (2021), &ldquo;Unemployment Risk,&rdquo; <i>Journal of Money, Credit and Banking</i>, 54(5), 1407&ndash;1424.</p>
         <p>See also &ldquo;Financial and Macroeconomic Indicators of Recession Risk,&rdquo; FEDS Notes, Board of Governors of the Federal Reserve System (2022).</p>
@@ -416,6 +438,18 @@
     </div>
 
     <section class="stat-row" id="risk-stat-row"></section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Latest reading by model</div>
+          <div class="chart-caption">Each model at its own latest available quarter &mdash; probability of a large increase, and its implied size (80th&#8209;percentile change, percentage points)</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="summary-table" id="risk-summary-table"></table>
+      </div>
+    </section>
 
     <section class="chart-card">
       <div class="chart-head">
@@ -448,15 +482,51 @@
     <section class="chart-card">
       <div class="chart-head">
         <div>
-          <div class="chart-title">Implied size of the increase, if it happens</div>
-          <div class="chart-caption">Percentage points, Full Model only, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
+          <div class="chart-title">Implied size of the increase — 1 year ahead</div>
+          <div class="chart-caption">80th&#8209;percentile change in the unemployment rate, percentage points, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
         </div>
-        <div class="legend" id="legend-risk-mag"></div>
+        <div class="legend" id="legend-risk-mag-h4"></div>
       </div>
       <div class="chart-wrap">
-        <svg class="chart" id="chart-risk-mag" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
-        <div class="tooltip" id="tooltip-risk-mag"></div>
+        <svg class="chart" id="chart-risk-mag-h4" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-risk-mag-h4"></div>
       </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Implied size of the increase — 3 years ahead</div>
+          <div class="chart-caption">80th&#8209;percentile change in the unemployment rate, percentage points, quarterly, 1965&ndash;present &mdash; grey bars are NBER recessions</div>
+        </div>
+        <div class="legend" id="legend-risk-mag-h12"></div>
+      </div>
+      <div class="chart-wrap">
+        <svg class="chart" id="chart-risk-mag-h12" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip-risk-mag-h12"></div>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Distribution of the change in unemployment — Full Model</div>
+          <div class="chart-caption" id="pdf-caption-full5"></div>
+        </div>
+        <div class="legend" id="legend-pdf-full5"></div>
+      </div>
+      <div class="pdf-panels" id="pdf-panels-full5"></div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-head">
+        <div>
+          <div class="chart-title">Distribution of the change in unemployment — Full Model ex. Credit</div>
+          <div class="chart-caption" id="pdf-caption-nocredit"></div>
+        </div>
+        <div class="legend" id="legend-pdf-nocredit"></div>
+      </div>
+      <div class="pdf-panels" id="pdf-panels-nocredit"></div>
     </section>
 
     <footer class="methodology">
@@ -464,8 +534,10 @@
       <div><b>Probability</b> &mdash; from a logistic regression: the modeled chance that the unemployment rate rises, over the given horizon, by more than its own historical 80th&#8209;percentile move (&#8776;&#190; point at 1 year, &#8776;2 points at 3 years) &mdash; roughly the size of move that has always accompanied a recession.</div>
       <div><b>Implied size</b> &mdash; from a quantile regression (80th percentile) on the same variables: not whether a large move happens, but how large it would be, in percentage points, at that percentile.</div>
       <div><b>Full Model</b> &mdash; unemployment rate, PCE inflation, growth in credit relative to GDP, the Baa corporate&#8209;bond spread, and the 10&#8209;year&#8209;Treasury&#8209;minus&#8209;fed&#8209;funds term spread.</div>
+      <div><b>Full Model ex. Credit</b> &mdash; the Full Model without credit growth: unemployment rate, PCE inflation, corporate&#8209;bond spread, and term spread. Estimated on exactly the same quarters, with the same large&#8209;increase threshold, so it differs from the Full Model only by the credit variable. Because it doesn't need the lagging credit data, it runs through the same quarter as the Financial Model.</div>
       <div><b>Financial Model</b> &mdash; the corporate&#8209;bond spread and term spread only, the conventional financial&#8209;variables approach to recession prediction.</div>
-      <div>Coefficients are re-estimated each update on an expanding window back to 1965:Q1, with 2020:Q1&ndash;2020:Q4 excluded from estimation (both as the starting quarter and whenever the forward&#8209;looking outcome itself falls in that window) so the COVID unemployment spike doesn't distort the fit; a paper-exact replication (fixed 1965:Q1&ndash;2019:Q4 sample) is also maintained. The Full Model can lag a quarter or two behind the Financial Model, since it needs BIS credit&#8209;to&#8209;GDP data that publishes with a delay. See the <code>output_gap/unemployment_risk</code> project.</div>
+      <div><b>Distribution</b> &mdash; quantile regressions at the 10th, 20th, 50th, 80th, and 90th percentiles, evaluated at each model's latest quarter, with a Jones&ndash;Faddy skewed&#8209;t density fitted to those five points by least squares. If separately estimated percentiles cross, they are put back in order before fitting. The <b>unconditional</b> reference applies the same fit to the actual percentiles of the change in unemployment over the estimation sample. The tables under each panel give the estimated percentiles themselves. The Financial Model has no distribution because no quantile regression is estimated for it.</div>
+      <div>Coefficients are re-estimated each update on an expanding window back to 1965:Q1, with 2020:Q1&ndash;2020:Q4 excluded from estimation (both as the starting quarter and whenever the forward&#8209;looking outcome itself falls in that window) so the COVID unemployment spike doesn't distort the fit; a paper-exact replication (fixed 1965:Q1&ndash;2019:Q4 sample) is also maintained. The Full Model can lag a quarter or two behind the other two models, since it needs BIS credit&#8209;to&#8209;GDP data that publishes with a delay. See the <code>output_gap/unemployment_risk</code> project; the Full Model ex. Credit and the distributions are estimated in this dashboard's own build from that project's data.</div>
       <div class="references-block">
         <div class="references-label">References</div>
         <div>M.T. Kiley (2021), &ldquo;Unemployment Risk,&rdquo; <i>Journal of Money, Credit and Banking</i>, 54(5), 1407&ndash;1424.</div>
@@ -855,13 +927,15 @@ function renderChart(svg, tooltip, dates, seriesData, opts) {
 
   const MODEL_SERIES = [
     { key: "full5", label: "Full Model", color: "var(--series-risk-full5)" },
+    { key: "nocredit", label: "Full Model ex. Credit", color: "var(--series-risk-nocredit)" },
     { key: "fin2", label: "Financial Model", color: "var(--series-risk-fin2)" },
   ];
-  const MAG_SERIES = [
-    { key: "h4", label: "1-year horizon", color: "var(--series-risk-mag-h4)" },
-    { key: "h12", label: "3-year horizon", color: "var(--series-risk-mag-h12)" },
-  ];
+  const SIZE_MODELS = MODEL_SERIES.filter(m => m.key !== "fin2");
 
+  function fmtQuarter(d) {
+    const [y, m] = d.split("-").map(Number);
+    return y + " Q" + ((m - 1) / 3 + 1);
+  }
   function lastKnownIndex(values) {
     for (let i = values.length - 1; i >= 0; i--) {
       if (values[i] !== null && values[i] !== undefined) return i;
@@ -883,8 +957,8 @@ function renderChart(svg, tooltip, dates, seriesData, opts) {
   }
   function probDeltaRows(values) {
     // Anchored to this series' own latest known value, not the shared
-    // array's last index -- full5 lags fin2 by a few quarters (BIS
-    // credit/GDP data lag), so they don't share a common "latest" date.
+    // array's last index -- full5 lags the other models by a few quarters
+    // (BIS credit/GDP data lag), so they don't share a common "latest" date.
     const lastIdx = lastKnownIndex(values);
     if (lastIdx < 0) return [];
     const priorIdx = indexOneYearBefore(lastIdx);
@@ -893,41 +967,131 @@ function renderChart(svg, tooltip, dates, seriesData, opts) {
   }
 
   const statRow = document.getElementById("risk-stat-row");
-  [
-    { label: "1-Yr Risk — Full Model", key: "risk_prob_full5_h4", color: "var(--series-risk-full5)" },
-    { label: "1-Yr Risk — Financial Model", key: "risk_prob_fin2_h4", color: "var(--series-risk-fin2)" },
-  ].forEach(t => {
-    const v = DATA[t.key];
-    statRow.appendChild(tile(t.label, fmtProb(lastKnown(v)), probDeltaRows(v), t.color, null));
+  MODEL_SERIES.forEach(m => {
+    const v = DATA["risk_prob_" + m.key + "_h4"];
+    statRow.appendChild(tile("1-Yr Risk — " + m.label, fmtProb(lastKnown(v)), probDeltaRows(v), m.color,
+      "Latest quarter: " + fmtQuarter(DATA.risk_latest_by_model[m.key])));
   });
+
+  // ---- latest reading by model ----
+  (function () {
+    const table = document.getElementById("risk-summary-table");
+    const valueAt = (key, d) => {
+      const arr = DATA[key];
+      if (!arr) return null;
+      const i = dates.indexOf(d);
+      return i < 0 ? null : arr[i];
+    };
+    const head = `<tr><th>Model</th><th>Latest quarter</th><th>Probability, 1 yr</th><th>Probability, 3 yr</th><th>Size, 1 yr</th><th>Size, 3 yr</th></tr>`;
+    const rows = MODEL_SERIES.map(m => {
+      const d = DATA.risk_latest_by_model[m.key];
+      const size = h => {
+        const v = valueAt("risk_magnitude_" + m.key + "_" + h, d);
+        return v === null || v === undefined ? "—" : fmtDelta(v);
+      };
+      return `<tr>
+        <td><span class="swatch" style="background:${m.color}"></span>${m.label}</td>
+        <td>${fmtQuarter(d)}</td>
+        <td>${fmtProb(valueAt("risk_prob_" + m.key + "_h4", d))}</td>
+        <td>${fmtProb(valueAt("risk_prob_" + m.key + "_h12", d))}</td>
+        <td>${size("h4")}</td>
+        <td>${size("h12")}</td>
+      </tr>`;
+    }).join("");
+    table.innerHTML = `<thead>${head}</thead><tbody>${rows}</tbody>`;
+  })();
 
   buildLegend(document.getElementById("legend-risk-h4"), MODEL_SERIES);
   buildLegend(document.getElementById("legend-risk-h12"), MODEL_SERIES);
-  buildLegend(document.getElementById("legend-risk-mag"), MAG_SERIES);
+  buildLegend(document.getElementById("legend-risk-mag-h4"), SIZE_MODELS);
+  buildLegend(document.getElementById("legend-risk-mag-h12"), SIZE_MODELS);
 
   const probAxisFmt = v => Math.round(v * 100) + "%";
   const ppAxisFmt = v => (v >= 0 ? "" : "−") + Math.abs(v).toFixed(1) + "pp";
 
-  const seriesH4 = [
-    { ...MODEL_SERIES[0], values: DATA.risk_prob_full5_h4 },
-    { ...MODEL_SERIES[1], values: DATA.risk_prob_fin2_h4 },
-  ];
-  const seriesH12 = [
-    { ...MODEL_SERIES[0], values: DATA.risk_prob_full5_h12 },
-    { ...MODEL_SERIES[1], values: DATA.risk_prob_fin2_h12 },
-  ];
-  const seriesMag = [
-    { ...MAG_SERIES[0], values: DATA.risk_magnitude_full5_h4 },
-    { ...MAG_SERIES[1], values: DATA.risk_magnitude_full5_h12 },
-  ];
+  const probSeries = h => MODEL_SERIES.map(m => ({ ...m, values: DATA["risk_prob_" + m.key + "_" + h] }));
+  const sizeSeries = h => SIZE_MODELS.map(m => ({ ...m, values: DATA["risk_magnitude_" + m.key + "_" + h] }));
+
+  // ---- fitted-distribution exhibits ----
+  const HORIZON_LABELS = { h4: "1 year ahead", h12: "3 years ahead" };
+  const fmtPP = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
+  const pctLabel = q => Math.round(q * 100) + "th";
+
+  function renderPdf(svg, pdf, model, color) {
+    const W = 460, H = 230, padL = 12, padR = 12, padT = 12, padB = 26;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const xs = pdf.x, cond = pdf.models[model].pdf, uncond = pdf.unconditional.pdf;
+    const xmin = xs[0], xmax = xs[xs.length - 1];
+    const ymax = Math.max(...cond, ...uncond) * 1.08;
+    const x = v => padL + ((v - xmin) / (xmax - xmin)) * plotW;
+    const y = v => padT + plotH - (v / ymax) * plotH;
+    const ns = "http://www.w3.org/2000/svg";
+    const el = (tag, attrs) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+    svg.innerHTML = "";
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: y(0), y2: y(0), class: "grid-line" }));
+    const rawStep = (xmax - xmin) / 6;
+    const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => (xmax - xmin) / s <= 7);
+    for (let v = Math.ceil(xmin / step) * step; v <= xmax + 1e-9; v += step) {
+      const t = el("text", { x: x(v), y: H - 8, class: "axis-label", "text-anchor": "middle" });
+      t.textContent = (Math.abs(v) < 1e-9 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v).toFixed(step < 1 ? 1 : 0)) + "pp";
+      svg.appendChild(t);
+    }
+    if (xmin < 0 && xmax > 0) {
+      svg.appendChild(el("line", { x1: x(0), x2: x(0), y1: padT, y2: y(0), class: "zero-line" }));
+    }
+
+    const path = vals => vals.map((v, i) => (i ? "L" : "M") + x(xs[i]).toFixed(2) + "," + y(v).toFixed(2)).join(" ");
+    svg.appendChild(el("path", { d: path(uncond), class: "series-path pdf-dash", stroke: "var(--series-neutral)" }));
+    svg.appendChild(el("path", { d: path(cond), class: "series-path", stroke: color }));
+
+    pdf.models[model].quantiles.forEach(q => {
+      if (q < xmin || q > xmax) return;
+      svg.appendChild(el("line", { x1: x(q), x2: x(q), y1: y(0), y2: y(0) - 7, class: "quantile-tick", stroke: color }));
+    });
+  }
+
+  function buildPdfExhibit(model, color) {
+    const first = DATA.risk_pdfs.h4;
+    const condDate = fmtQuarter(first.models[model].date);
+    document.getElementById("pdf-caption-" + model).textContent =
+      "Fitted density of the change in the unemployment rate, percentage points, at " + condDate +
+      " — ticks mark the estimated 10th, 20th, 50th, 80th, and 90th percentiles";
+    document.getElementById("legend-pdf-" + model).innerHTML = `
+      <span class="item"><span class="swatch-line" style="background:${color}"></span>${condDate}</span>
+      <span class="item"><span class="swatch-dash"></span>Unconditional</span>`;
+    const container = document.getElementById("pdf-panels-" + model);
+    container.innerHTML = "";
+    ["h4", "h12"].forEach(h => {
+      const pdf = DATA.risk_pdfs[h];
+      const panel = document.createElement("div");
+      const levels = pdf.quantile_levels;
+      const sample = pdf.sample.map(d => d.slice(0, 4)).join("–");
+      panel.innerHTML = `
+        <div class="pdf-panel-title">${HORIZON_LABELS[h]}</div>
+        <svg class="chart"></svg>
+        <div class="pdf-table-wrap"><table class="pdf-quantiles">
+          <tr><th>Percentile</th>${levels.map(q => `<th>${pctLabel(q)}</th>`).join("")}</tr>
+          <tr><td>${condDate}</td>${pdf.models[model].quantiles.map(v => `<td>${fmtPP(v)}</td>`).join("")}</tr>
+          <tr><td>Unconditional, ${sample}</td>${pdf.unconditional.quantiles.map(v => `<td>${fmtPP(v)}</td>`).join("")}</tr>
+        </table></div>`;
+      container.appendChild(panel);
+      renderPdf(panel.querySelector("svg"), pdf, model, color);
+    });
+  }
+  SIZE_MODELS.forEach(m => buildPdfExhibit(m.key, m.color));
 
   function renderAll() {
     renderChart(document.getElementById("chart-risk-h4"), document.getElementById("tooltip-risk-h4"),
-      dates, seriesH4, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
+      dates, probSeries("h4"), { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
     renderChart(document.getElementById("chart-risk-h12"), document.getElementById("tooltip-risk-h12"),
-      dates, seriesH12, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
-    renderChart(document.getElementById("chart-risk-mag"), document.getElementById("tooltip-risk-mag"),
-      dates, seriesMag, { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtDelta, axisFmt: ppAxisFmt, recessions: DATA.recessions });
+      dates, probSeries("h12"), { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtProb, axisFmt: probAxisFmt, recessions: DATA.recessions });
+    renderChart(document.getElementById("chart-risk-mag-h4"), document.getElementById("tooltip-risk-mag-h4"),
+      dates, sizeSeries("h4"), { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtDelta, axisFmt: ppAxisFmt, recessions: DATA.recessions });
+    renderChart(document.getElementById("chart-risk-mag-h12"), document.getElementById("tooltip-risk-mag-h12"),
+      dates, sizeSeries("h12"), { w: 960, h: 320, xTicks: yearTicks(dates, 10), fmt: fmtDelta, axisFmt: ppAxisFmt, recessions: DATA.recessions });
   }
   renderAll();
   window.addEventListener("resize", renderAll);
