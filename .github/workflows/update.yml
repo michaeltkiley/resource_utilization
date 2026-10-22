@@ -5,6 +5,10 @@ on:
     types: [edo-updated, rstar-updated, unemployment-risk-updated]
   workflow_dispatch: {}
 
+concurrency:
+  group: update-resource-utilization
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
